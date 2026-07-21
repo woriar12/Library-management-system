@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library Management System</title>
+  <script>
+    // Redirect to login (or dashboard if already logged in)
+    const token = localStorage.getItem('lms_token');
+    const user  = JSON.parse(localStorage.getItem('lms_user') || 'null');
+    if (token && user) {
+      window.location.href = user.role === 'admin' ? '/admin/dashboard.html' : '/student/dashboard.html';
+    } else {
+      window.location.href = '/login.html';
+    }
+  </script>
+</head>
+<body></body>
+</html>

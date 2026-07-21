@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Library Management System</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/auth.css" />
+</head>
+<body>
+
+<div class="auth-page">
+
+  <!-- ═══ Left: Branding Panel ═══ -->
+  <div class="auth-brand">
+    <div class="auth-brand-logo">📚</div>
+    <h1>Library Management System</h1>
+    <p>Your all-in-one solution for managing books, students, and library operations efficiently.</p>
+
+    <div class="auth-features">
+      <div class="auth-feature-item">
+        <span>📖</span><span>Manage thousands of books effortlessly</span>
+      </div>
+      <div class="auth-feature-item">
+        <span>👨‍🎓</span><span>Track student borrowing history</span>
+      </div>
+      <div class="auth-feature-item">
+        <span>⏰</span><span>Automatic fine calculation</span>
+      </div>
+      <div class="auth-feature-item">
+        <span>🔒</span><span>Secure role-based access</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Right: Login Form ═══ -->
+  <div class="auth-form-panel">
+    <div class="auth-box">
+      <h2>Welcome Back 👋</h2>
+      <p class="subtitle">Sign in to access your dashboard</p>
+
+      <!-- Role Tabs -->
+      <div class="role-tabs">
+        <button class="role-tab active" data-tab="admin-tab">
+          🛡️ Admin
+        </button>
+        <button class="role-tab" data-tab="student-tab">
+          🎓 Student
+        </button>
+      </div>
+
+      <!-- ── Admin Login Form ── -->
+      <div id="admin-tab" class="tab-content active">
+        <div id="admin-alert" class="auth-alert"></div>
+        <form id="admin-login-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="admin-id">
+              Admin ID <span class="required">*</span>
+            </label>
+            <input
+              id="admin-id"
+              type="text"
+              class="form-control"
+              placeholder="e.g. ADMIN001"
+              autocomplete="username"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="admin-password">
+              Password <span class="required">*</span>
+            </label>
+            <input
+              id="admin-password"
+              type="password"
+              class="form-control"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="auth-submit-btn">
+            Login as Admin
+          </button>
+        </form>
+      </div>
+
+      <!-- ── Student Login Form ── -->
+      <div id="student-tab" class="tab-content">
+        <div id="student-alert" class="auth-alert"></div>
+        <form id="student-login-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="student-uid">
+              UID <span class="required">*</span>
+            </label>
+            <input
+              id="student-uid"
+              type="text"
+              class="form-control"
+              placeholder="Your university ID"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="student-reg">
+              Register Number <span class="required">*</span>
+            </label>
+            <input
+              id="student-reg"
+              type="text"
+              class="form-control"
+              placeholder="Your register number"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="student-password">
+              Password <span class="required">*</span>
+            </label>
+            <input
+              id="student-password"
+              type="password"
+              class="form-control"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="auth-submit-btn">
+            Login as Student
+          </button>
+        </form>
+        <div class="auth-link">
+          Don't have an account?
+          <a href="/register.html">Register here</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+</body>
+</html>

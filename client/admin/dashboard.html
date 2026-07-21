@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — LMS</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ═══ Sidebar ═══ -->
+  <aside class="sidebar" id="sidebar">
+    <a class="sidebar-logo" href="/admin/dashboard.html">
+      <span class="logo-icon">📚</span>
+      <span class="logo-text">LibraryMS <small>Admin Panel</small></span>
+    </a>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <a class="nav-item active" href="/admin/dashboard.html">
+          <span class="nav-icon">🏠</span> Dashboard
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Library</div>
+        <a class="nav-item" href="/admin/books.html">
+          <span class="nav-icon">📖</span> Books
+        </a>
+        <a class="nav-item" href="/admin/issue-book.html">
+          <span class="nav-icon">📤</span> Issue Book
+        </a>
+        <a class="nav-item" href="/admin/return-book.html">
+          <span class="nav-icon">📥</span> Return Book
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Students</div>
+        <a class="nav-item" href="/admin/students.html">
+          <span class="nav-icon">👨‍🎓</span> Students
+        </a>
+        <a class="nav-item" href="/admin/fines.html">
+          <span class="nav-icon">💰</span> Fines
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="user-name" id="sidebar-user-name">Admin</div>
+          <div class="user-role" id="sidebar-user-role">admin</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ═══ Main ═══ -->
+  <div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <div>
+          <div class="topbar-title">Dashboard</div>
+          <div class="topbar-subtitle">Overview of library operations</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-date" id="topbar-date"></div>
+        <span>👤 <span id="topbar-user-name"></span></span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📚</div>
+          <div class="stat-value" id="stat-books">—</div>
+          <div class="stat-label">Total Books</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-icon">👨‍🎓</div>
+          <div class="stat-value" id="stat-students">—</div>
+          <div class="stat-label">Total Students</div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon">📤</div>
+          <div class="stat-value" id="stat-issued">—</div>
+          <div class="stat-label">Books Issued</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📥</div>
+          <div class="stat-value" id="stat-returned">—</div>
+          <div class="stat-label">Books Returned</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-value" id="stat-overdue">—</div>
+          <div class="stat-label">Overdue Books</div>
+        </div>
+      </div>
+
+      <!-- Chart + Recent Issues Row -->
+      <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:1.25rem;margin-bottom:1.5rem;" id="chart-row">
+        <!-- Doughnut Chart -->
+        <div class="section-card">
+          <div class="section-header"><h3>📊 Book Status</h3></div>
+          <div class="section-body" style="display:flex;align-items:center;justify-content:center;height:200px;">
+            <canvas id="statusChart" width="200" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent Issues Table -->
+        <div class="section-card">
+          <div class="section-header">
+            <h3>🕐 Recent Issues</h3>
+            <a href="/admin/issue-book.html" class="btn btn-sm btn-primary">+ Issue Book</a>
+          </div>
+          <div class="section-body" style="padding:0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Book</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-issues-body">
+                <tr><td colspan="4" class="text-center text-muted" style="padding:1.5rem;">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section-card">
+        <div class="section-header"><h3>⚡ Quick Actions</h3></div>
+        <div class="section-body">
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+            <a href="/admin/books.html" class="btn btn-primary">📖 Manage Books</a>
+            <a href="/admin/issue-book.html" class="btn btn-outline">📤 Issue Book</a>
+            <a href="/admin/return-book.html" class="btn btn-outline">📥 Return Book</a>
+            <a href="/admin/students.html" class="btn btn-outline">👨‍🎓 Students</a>
+            <a href="/admin/fines.html" class="btn btn-outline">💰 Fines</a>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/admin/dashboard.js"></script>
+</body>
+</html>
