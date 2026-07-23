@@ -120,34 +120,147 @@
 
 <!-- Receipt Upload Modal -->
 <div class="modal-overlay" id="receipt-modal">
-  <div class="modal">
+  <div class="modal" style="max-width:480px;">
     <div class="modal-header">
-      <h3>📄 Upload Payment Receipt</h3>
+      <div>
+        <h3 style="margin:0;font-size:1.05rem;">📄 Upload Payment Receipt</h3>
+        <div id="modal-book-name" style="font-size:.8rem;color:var(--text-muted);margin-top:.2rem;"></div>
+      </div>
       <button class="modal-close" id="modal-close">✕</button>
     </div>
-    <p style="margin-bottom:1rem;font-size:.87rem;color:var(--text-muted);">
-      Upload proof of payment (JPG, PNG, or PDF — max 5MB)
-    </p>
+
+    <!-- Payment Steps -->
+    <div class="receipt-steps">
+      <div class="receipt-step">
+        <div class="step-num">1</div>
+        <div class="step-text">Pay the fine amount at the library counter or via UPI</div>
+      </div>
+      <div class="receipt-step">
+        <div class="step-num">2</div>
+        <div class="step-text">Take a screenshot or photo of payment proof</div>
+      </div>
+      <div class="receipt-step">
+        <div class="step-num">3</div>
+        <div class="step-text">Upload it here — admin will verify &amp; mark it paid</div>
+      </div>
+    </div>
+
     <div id="receipt-alert" class="auth-alert" style="display:none;margin-bottom:.75rem;"></div>
     <form id="receipt-form">
       <input type="hidden" id="receipt-fine-id" />
-      <div class="form-group">
-        <label class="form-label">Select File <span class="required">*</span></label>
-        <input type="file" id="receipt-file" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required />
+
+      <!-- File Drop Zone -->
+      <div class="file-dropzone" id="file-dropzone" onclick="document.getElementById('receipt-file').click()">
+        <div class="dropzone-icon">📤</div>
+        <div id="receipt-file-label" class="dropzone-label">Click or drag a file here</div>
+        <div class="dropzone-hint">JPG, PNG or PDF — max 5 MB</div>
       </div>
-      <div class="modal-footer">
+      <input type="file" id="receipt-file" style="display:none;" accept=".jpg,.jpeg,.png,.pdf" required />
+
+      <div class="modal-footer" style="margin-top:1rem;">
         <button type="button" class="btn btn-outline" id="modal-cancel">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="btn-upload-receipt">Upload</button>
+        <button type="submit" class="btn btn-primary" id="btn-upload-receipt">📤 Upload Receipt</button>
       </div>
     </form>
   </div>
 </div>
 
+
 <style>
   @media (max-width:900px) { #content-grid { grid-template-columns: 1fr !important; } }
   .auth-alert { padding:.65rem 1rem; border-radius:6px; font-size:.85rem; border-left:4px solid; }
-  .auth-alert.error { background:#fee2e2; color:#b91c1c; border-color:#ef4444; display:block !important; }
+  .auth-alert.error   { background:#fee2e2; color:#b91c1c; border-color:#ef4444; display:block !important; }
   .auth-alert.success { background:#dcfce7; color:#166534; border-color:#10b981; display:block !important; }
+
+  /* Fine Cards */
+  .fine-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: .85rem;
+    overflow: hidden;
+  }
+  .fine-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .85rem 1rem;
+    background: rgba(239,68,68,.06);
+    border-bottom: 1px solid var(--border);
+  }
+  .fine-book-name   { font-weight:600; font-size:.9rem; margin-bottom:.25rem; }
+  .fine-overdue-badge {
+    display: inline-block;
+    font-size: .74rem;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    border-radius: 20px;
+    padding: 2px 8px;
+  }
+  .fine-amount-box {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #dc2626;
+    white-space: nowrap;
+    padding-left: 1rem;
+  }
+  .fine-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .7rem 1rem;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+  .fine-receipt-status {
+    font-size: .8rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .fine-receipt-status.uploaded    { background:#dcfce7; color:#166534; }
+  .fine-receipt-status.not-uploaded { background:#fef9c3; color:#92400e; }
+  .btn-upload-trigger { white-space: nowrap; font-size:.82rem; }
+
+  /* Receipt Steps */
+  .receipt-steps {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    background: rgba(99,102,241,.06);
+    border: 1px solid rgba(99,102,241,.18);
+    border-radius: 8px;
+    padding: .85rem 1rem;
+    margin-bottom: 1rem;
+  }
+  .receipt-step { display:flex; align-items:flex-start; gap:.6rem; }
+  .step-num {
+    min-width:22px; height:22px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.74rem; font-weight:700;
+  }
+  .step-text { font-size:.82rem; color:var(--text-muted); line-height:1.4; }
+
+  /* File Dropzone */
+  .file-dropzone {
+    border: 2px dashed var(--primary);
+    border-radius: 10px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background .2s;
+    background: rgba(99,102,241,.04);
+  }
+  .file-dropzone:hover { background: rgba(99,102,241,.1); }
+  .dropzone-icon  { font-size: 2rem; margin-bottom: .4rem; }
+  .dropzone-label { font-size: .88rem; font-weight: 600; color: var(--primary); }
+  .dropzone-hint  { font-size: .75rem; color: var(--text-muted); margin-top: .25rem; }
+
+  /* Legacy fine-item (keep for history) */
   .book-item { padding:.75rem 0; border-bottom:1px solid var(--border); }
   .book-item:last-child { border-bottom:none; }
   .book-item .book-title { font-weight:600; font-size:.9rem; }

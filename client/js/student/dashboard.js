@@ -71,28 +71,40 @@ function renderPendingFines(fines) {
   }
 
   container.innerHTML = fines.map(fine => {
-    const bookName = fine.issuedBook?.book?.name || '—';
+    const bookName   = fine.issuedBook?.book?.name || '—';
     const hasReceipt = !!fine.receiptPath;
+    const dueDate    = fine.issuedBook?.dueDate;
+    const overdueDays = dueDate
+      ? Math.ceil((new Date() - new Date(dueDate)) / (1000 * 60 * 60 * 24))
+      : null;
 
     return `
-      <div class="fine-item">
-        <div>
-          <div class="fw-semi" style="font-size:.88rem;">${bookName}</div>
-          <div class="text-muted" style="font-size:.78rem;">
-            ${hasReceipt ? '📄 Receipt uploaded' : 'No receipt'}
+      <div class="fine-card">
+        <div class="fine-card-top">
+          <div class="fine-book-info">
+            <div class="fine-book-name">📖 ${bookName}</div>
+            ${overdueDays !== null ? `<div class="fine-overdue-badge">⏰ Overdue by ${overdueDays} day(s)</div>` : ''}
           </div>
+          <div class="fine-amount-box">₹${fine.amount}</div>
         </div>
-        <div style="text-align:right;">
-          <div class="fw-bold text-danger" style="font-size:1rem;">₹${fine.amount}</div>
-          ${!hasReceipt
-            ? `<button class="btn btn-sm btn-primary" style="margin-top:.3rem;" onclick="openReceiptModal('${fine._id}')">Upload Receipt</button>`
-            : `<button class="btn btn-sm btn-outline" style="margin-top:.3rem;" onclick="openReceiptModal('${fine._id}')">Re-upload</button>`
-          }
+        <div class="fine-card-bottom">
+          <div class="fine-receipt-status ${hasReceipt ? 'uploaded' : 'not-uploaded'}">
+            ${hasReceipt
+              ? '✅ Receipt uploaded — awaiting admin approval'
+              : '⚠️ Payment receipt not uploaded yet'}
+          </div>
+          <button
+            class="btn ${hasReceipt ? 'btn-outline' : 'btn-primary'} btn-upload-trigger"
+            onclick="openReceiptModal('${fine._id}', '${bookName.replace(/'/g, "\\'")}')"
+          >
+            ${hasReceipt ? '🔄 Re-upload Receipt' : '📤 Upload Receipt'}
+          </button>
         </div>
       </div>
     `;
   }).join('');
 }
+
 
 /* ── Render History Table ───────────────────────── */
 function renderHistory(allIssues) {
@@ -134,16 +146,21 @@ function renderHistory(allIssues) {
 }
 
 /* ── Receipt Upload Modal ───────────────────────── */
-function openReceiptModal(fineId) {
+function openReceiptModal(fineId, bookName) {
   selectedFineId = fineId;
   document.getElementById('receipt-fine-id').value = fineId;
   document.getElementById('receipt-file').value    = '';
+  document.getElementById('receipt-file-label').textContent = 'Click or drag a file here';
+  document.getElementById('modal-book-name').textContent = bookName || '';
   hideReceiptAlert();
   document.getElementById('receipt-modal')?.classList.add('open');
 }
 
 function initReceiptModal() {
-  const form = document.getElementById('receipt-form');
+  const form     = document.getElementById('receipt-form');
+  const fileInput = document.getElementById('receipt-file');
+  const dropzone  = document.getElementById('file-dropzone');
+  const fileLabel = document.getElementById('receipt-file-label');
 
   document.getElementById('modal-close')?.addEventListener('click', closeModal);
   document.getElementById('modal-cancel')?.addEventListener('click', closeModal);
@@ -151,10 +168,40 @@ function initReceiptModal() {
     if (e.target.id === 'receipt-modal') closeModal();
   });
 
+  // Show selected filename in dropzone
+  fileInput?.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (file && fileLabel) {
+      fileLabel.textContent = `✅ ${file.name}`;
+      dropzone?.classList.add('file-selected');
+    }
+  });
+
+  // Drag & Drop support
+  dropzone?.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.style.background = 'rgba(99,102,241,.15)';
+  });
+  dropzone?.addEventListener('dragleave', () => {
+    dropzone.style.background = '';
+  });
+  dropzone?.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.style.background = '';
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      // Assign to file input
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+      if (fileLabel) fileLabel.textContent = `✅ ${file.name}`;
+    }
+  });
+
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn  = document.getElementById('btn-upload-receipt');
-    const file = document.getElementById('receipt-file').files[0];
+    const file = fileInput?.files[0];
 
     if (!file) {
       showReceiptAlert('Please select a file.', 'error');
@@ -175,19 +222,19 @@ function initReceiptModal() {
     const formData = new FormData();
     formData.append('receipt', file);
 
-    btn.disabled = true;
-    btn.textContent = 'Uploading...';
+    btn.disabled    = true;
+    btn.textContent = '⏳ Uploading...';
 
     try {
       await apiRequest('POST', `/fines/${selectedFineId}/receipt`, formData);
-      showToast('Receipt uploaded successfully!', 'success');
+      showToast('Receipt uploaded successfully! Admin will verify soon.', 'success');
       closeModal();
       await loadStudentDashboard();
     } catch (err) {
       showReceiptAlert(err.message, 'error');
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Upload';
+      btn.disabled    = false;
+      btn.textContent = '📤 Upload Receipt';
     }
   });
 }

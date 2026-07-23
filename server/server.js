@@ -82,6 +82,65 @@ const { studentOnly } = require('./middleware/auth');
 app.get('/api/student/stats', protect, studentOnly, async (req, res) => {
   try {
     const studentId = req.user.id;
+    const FINE_RATE  = parseInt(process.env.FINE_RATE_PER_DAY) || 5; // ₹ per day
+    const now        = new Date();
+
+    // Auto-update overdue status
+    await IssuedBook.updateMany(
+      { student: studentId, status: 'issued', dueDate: { $lt: now } },
+      { $set: { status: 'overdue' } }
+    );
+
+    // Auto-create FinePayment records for overdue books that don't have one yet
+    const overdueBooks = await IssuedBook.find({
+      student: studentId,
+      status: 'overdue',
+      fineStatus: 'none',           // only those without a fine record
+    });
+
+    for (const issue of overdueBooks) {
+      const diffMs   = now - new Date(issue.dueDate);
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const fineAmt  = diffDays * FINE_RATE;
+
+      if (fineAmt > 0) {
+        // Double-check no duplicate fine record exists
+        const existing = await FinePayment.findOne({ issuedBook: issue._id, status: 'pending' });
+        if (!existing) {
+          await FinePayment.create({
+            student:    studentId,
+            issuedBook: issue._id,
+            amount:     fineAmt,
+            status:     'pending',
+          });
+          // Update fineStatus on the issued book
+          await IssuedBook.findByIdAndUpdate(issue._id, {
+            fine:       fineAmt,
+            fineStatus: 'pending',
+          });
+        }
+      }
+    }
+
+    // Update fine amount daily for already-pending overdue fines (amount grows each day)
+    const existingPendingFines = await FinePayment.find({
+      student: studentId,
+      status:  'pending',
+    }).populate('issuedBook');
+
+    for (const fine of existingPendingFines) {
+      const issue = fine.issuedBook;
+      if (issue && issue.status === 'overdue') {
+        const diffMs   = now - new Date(issue.dueDate);
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        const newAmt   = diffDays * FINE_RATE;
+        if (newAmt !== fine.amount) {
+          fine.amount = newAmt;
+          await fine.save();
+          await IssuedBook.findByIdAndUpdate(issue._id, { fine: newAmt });
+        }
+      }
+    }
 
     const issuedBooks = await IssuedBook.find({ student: studentId, status: { $in: ['issued', 'overdue'] } })
       .populate('book', 'name author category');
@@ -93,22 +152,15 @@ app.get('/api/student/stats', protect, studentOnly, async (req, res) => {
     const pendingFines = await FinePayment.find({ student: studentId, status: 'pending' })
       .populate({ path: 'issuedBook', populate: { path: 'book', select: 'name author' } });
 
-    // Auto-update overdue
-    const now = new Date();
-    await IssuedBook.updateMany(
-      { student: studentId, status: 'issued', dueDate: { $lt: now } },
-      { $set: { status: 'overdue' } }
-    );
-
     res.json({
       success: true,
       issuedBooks,
       returnedBooks,
       pendingFines,
       counts: {
-        issued: issuedBooks.length,
+        issued:   issuedBooks.length,
         returned: returnedBooks.length,
-        fines: pendingFines.reduce((sum, f) => sum + f.amount, 0),
+        fines:    pendingFines.reduce((sum, f) => sum + f.amount, 0),
       },
     });
   } catch (err) {
